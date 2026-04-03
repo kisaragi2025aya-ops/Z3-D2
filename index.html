@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z3.D2 - ゼンゼロ厳選マネージャー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Z3.D2 厳選データベース</h1>
+        <nav>
+            <button onclick="changeMode('view')">データ閲覧（図鑑）</button>
+            <button onclick="changeMode('register')">新規追加・編集</button>
+        </nav>
+    </header>
+
+    <main>
+        <section id="view-mode">
+            <div class="filter-bar">
+                <input type="text" id="search-input" placeholder="名前、ディスク、属性、特性で検索..." oninput="filterData()">
+            </div>
+            
+            <div class="display-container">
+                <div class="section-header">
+                    <h2>エージェント図鑑</h2>
+                </div>
+                <div id="char-list" class="list-container">
+                    </div>
+
+                <div class="section-header" style="margin-top: 40px;">
+                    <h2>ドライバディスク図鑑（自動集計）</h2>
+                    <p style="font-size: 0.8rem; color: #666;">※キャラ登録情報から「残すべきメインステ」を自動算出します</p>
+                </div>
+                <div id="art-list" class="list-container">
+                    </div>
+            </div>
+        </section>
+
+        <section id="register-mode" style="display:none;">
+            <div class="mode-tabs">
+                <button onclick="showForm('char-form-container')">エージェント登録</button>
+                <button onclick="showForm('art-form-container')">ドライバディスク登録</button>
+            </div>
+
+            <div id="char-form-container" class="registration-form">
+                <h3>エージェント詳細設定</h3>
+                <form id="char-form">
+                    <div class="form-group">
+                        <label>エージェント名:</label>
+                        <input type="text" id="char-name" required placeholder="例：エレン・ジョー">
+                    </div>
+
+                    <div class="form-group">
+                        <label>基本データ:</label>
+                        <div class="checkbox-group">
+                            <span>属性:</span>
+                            <label><input type="radio" name="element" value="物理" checked> 物理</label>
+                            <label><input type="radio" name="element" value="エーテル"> エーテル</label>
+                            <label><input type="radio" name="element" value="炎"> 炎</label>
+                            <label><input type="radio" name="element" value="氷"> 氷</label>
+                            <label><input type="radio" name="element" value="電気"> 電気</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-top:8px;">
+                            <span>攻撃:</span>
+                            <label><input type="radio" name="attack-type" value="斬撃" checked> 斬撃</label>
+                            <label><input type="radio" name="attack-type" value="刺突"> 刺突</label>
+                            <label><input type="radio" name="attack-type" value="打撃"> 打撃</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-top:8px;">
+                            <span>特性:</span>
+                            <label><input type="radio" name="job" value="強攻" checked> 強攻</label>
+                            <label><input type="radio" name="job" value="撃破"> 撃破</label>
+                            <label><input type="radio" name="job" value="異常"> 異常</label>
+                            <label><input type="radio" name="job" value="支援"> 支援</label>
+                            <label><input type="radio" name="job" value="防護"> 防護</label>
+                            <label><input type="radio" name="job" value="命破"> 命破</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>所属陣営:</label>
+                        <select id="char-faction" style="width:100%; padding:10px; border-radius:6px;">
+                            <option value="邪兎屋">邪兎屋</option>
+                            <option value="ヴィクトリア家政">ヴィクトリア家政</option>
+                            <option value="白祇重工">白祇重工</option>
+                            <option value="防衛軍">防衛軍</option>
+                            <option value="対ホロウ六課">対ホロウ六課</option>
+                            <option value="特務捜査班">特務捜査班</option>
+                            <option value="カリュドーンの子">カリュドーンの子</option>
+                            <option value="スターズオブリラ">スターズオブリラ</option>
+                            <option value="モッキンバード">モッキンバード</option>
+                            <option value="雲嶽山">雲嶽山</option>
+                            <option value="怪啖屋">怪啖屋</option>
+                            <option value="クランプスの黒枝">クランプスの黒枝</option>
+                            <option value="妄想エンジェル">妄想エンジェル</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>推奨音動機・サブステータス:</label>
+                        <input type="text" id="recommended-weapons" placeholder="例：深海に潜る鋭い歯" style="margin-bottom:8px;">
+                        <textarea id="sub-stats-priority" placeholder="例：会心率 ＞ 会心ダメ ＞ 攻撃力%"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>推奨ドライバディスク（4セット/2セット両方チェック）:</label>
+                        <div id="char-target-art-list" class="checkbox-group">
+                            </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>推奨メインステータス:</label>
+                        <div class="checkbox-group">
+                            <span>IV:</span>
+                            <label><input type="checkbox" name="p4" value="HP"> HP</label>
+                            <label><input type="checkbox" name="p4" value="攻撃"> 攻撃</label>
+                            <label><input type="checkbox" name="p4" value="防御"> 防御</label>
+                            <label><input type="checkbox" name="p4" value="会心率"> 会心率</label>
+                            <label><input type="checkbox" name="p4" value="会心ダメ"> 会心ダメ</label>
+                            <label><input type="checkbox" name="p4" value="異常"> 異常</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-top:8px;">
+                            <span>V:</span>
+                            <label><input type="checkbox" name="p5" value="HP"> HP</label>
+                            <label><input type="checkbox" name="p5" value="攻撃"> 攻撃</label>
+                            <label><input type="checkbox" name="p5" value="防御"> 防御</label>
+                            <label><input type="checkbox" name="p5" value="貫通"> 貫通</label>
+                            <label><input type="checkbox" name="p5" value="物理"> 物理</label>
+                            <label><input type="checkbox" name="p5" value="炎"> 炎</label>
+                            <label><input type="checkbox" name="p5" value="氷"> 氷</label>
+                            <label><input type="checkbox" name="p5" value="電気"> 電気</label>
+                            <label><input type="checkbox" name="p5" value="エーテル"> エーテル</label>
+                        </div>
+                        <div class="checkbox-group" style="margin-top:8px;">
+                            <span>VI:</span>
+                            <label><input type="checkbox" name="p6" value="HP"> HP</label>
+                            <label><input type="checkbox" name="p6" value="攻撃"> 攻撃</label>
+                            <label><input type="checkbox" name="p6" value="防御"> 防御</label>
+                            <label><input type="checkbox" name="p6" value="異常"> 異常</label>
+                            <label><input type="checkbox" name="p6" value="衝撃"> 衝撃</label>
+                            <label><input type="checkbox" name="p6" value="エネルギー"> エネルギー</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>画像URL（エージェント）:</label>
+                        <input type="url" id="char-icon-url" placeholder="https://...">
+                    </div>
+
+                    <button type="submit" class="save-btn">エージェントデータを保存</button>
+                </form>
+            </div>
+
+            <div id="art-form-container" class="registration-form" style="display:none;">
+                <h3>ドライバディスク詳細設定</h3>
+                <form id="art-form">
+                    <div class="form-group">
+                        <label>ディスク名:</label>
+                        <input type="text" id="art-name" required placeholder="例：ウッドペッカー・エレクトロ">
+                    </div>
+                    <div class="form-group">
+                        <label>2セット効果:</label>
+                        <textarea id="art-effect-2" placeholder="会心率+8%"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>4セット効果:</label>
+                        <textarea id="art-effect-4" placeholder="『通常攻撃』『強化特殊スキル』..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>画像URL（ディスク）:</label>
+                        <input type="url" id="art-img-url" placeholder="https://...">
+                    </div>
+                    <button type="submit" class="save-btn">ディスクデータを保存</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <button id="back-to-top" title="ページトップへ">↑</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
