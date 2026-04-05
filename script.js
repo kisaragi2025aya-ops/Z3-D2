@@ -37,6 +37,8 @@ async function loadData() {
 function renderAll() {
     const charList = document.getElementById('char-list');
     const artList = document.getElementById('art-list');
+    
+    // --- エージェント図鑑の描画 ---
     if (!allData.characters || allData.characters.length <= 1) {
         charList.innerHTML = "<p>データがありません</p>";
     } else {
@@ -86,9 +88,13 @@ function renderAll() {
         }).join('');
     }
 
+    // --- ドライバディスク図鑑の描画 (2set/4set両表示) ---
     if (allData.artifacts && allData.artifacts.length > 1) {
         artList.innerHTML = allData.artifacts.slice(1).map(a => {
             const artName = a[0];
+            const effect2 = a[1] || "未登録";
+            const effect4 = a[2] || "未登録";
+            
             const users4set = allData.characters.slice(1).filter(c => c[2] === artName);
             const users2set = allData.characters.slice(1).filter(c => c[12] === artName);
             const allUsers = [...users4set, ...users2set];
@@ -114,7 +120,8 @@ function renderAll() {
                     <p><strong>使用者(4set):</strong> ${users4set.map(u => u[0]).join(', ') || 'なし'}</p>
                     <p><strong>使用者(2set):</strong> ${users2set.map(u => u[0]).join(', ') || 'なし'}</p>
                     <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-                    <p style="font-size:0.8rem; color:#bbb;"><strong>4枚効果:</strong> ${a[2] || '未登録'}</p>
+                    <p style="font-size:0.85rem; color:#fff; margin-bottom:8px;"><strong>2枚効果:</strong> ${effect2}</p>
+                    <p style="font-size:0.8rem; color:#bbb;"><strong>4枚効果:</strong> ${effect4}</p>
                 </div>
             </div>`;
         }).join('');
@@ -224,7 +231,7 @@ async function deleteItem(sheet, id) {
 
 function filterData() {
     const query = document.getElementById('search-input').value.toLowerCase();
-    document.querySelectorAll('.char-card, .art-card').forEach(card => {
+    document.querySelectorAll('.card').forEach(card => {
         card.style.display = card.innerText.toLowerCase().includes(query) ? 'block' : 'none';
     });
 }
