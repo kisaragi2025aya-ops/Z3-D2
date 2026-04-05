@@ -30,7 +30,7 @@ async function loadData() {
         renderAll();
     } catch (e) {
         console.error("データの読み込みに失敗しました:", e);
-        alert("データの読み込みに失敗しました。スプレッドシートの列数を確認してください。");
+        alert("データの取得に失敗しました。URLまたはネット接続を確認してください。");
     }
 }
 
@@ -39,57 +39,53 @@ function renderAll() {
     const artList = document.getElementById('art-list');
     if (!allData.characters || allData.characters.length <= 1) {
         charList.innerHTML = "<p>データがありません</p>";
-        return;
-    }
+    } else {
+        charList.innerHTML = allData.characters.slice(1).map(c => {
+            const name     = c[0] || "不明";
+            const element  = c[1] || "-";
+            const disk4    = c[2] || "未設定";
+            const job      = c[3] || "-";
+            const faction  = c[4] || "-";
+            const weapon   = c[5] || "未設定";
+            const substat  = c[6] || "未設定";
+            const p4       = c[7] || "-";
+            const p5       = c[8] || "-";
+            const p6       = c[9] || "-";
+            const img      = c[10] || 'https://via.placeholder.com/70?text=Agent';
+            const atkType  = c[11] || "-";
+            const disk2    = c[12] || "未設定";
 
-    // --- エージェント図鑑の表示 ---
-    charList.innerHTML = allData.characters.slice(1).map(c => {
-        // データが足りない場合のフォールバック（エラー防止）
-        const name = c[0] || "不明";
-        const element = c[1] || "-";
-        const disk4 = c[2] || "未設定";
-        const job = c[3] || "-";
-        const faction = c[4] || "-";
-        const weapon = c[5] || "未設定";
-        const substat = c[6] || "未設定";
-        const p4 = c[7] || "-";
-        const p5 = c[8] || "-";
-        const p6 = c[9] || "-";
-        const img = c[10] || 'https://via.placeholder.com/70?text=Agent';
-        const atkType = c[11] || "-";
-        const disk2 = c[12] || "未設定"; // 送信データに基づき13番目
-
-        return `
-        <div class="card char-card">
-            <div class="card-header">
-                <img src="${img}" alt="${name}">
-                <div style="flex-grow:1;">
-                    <h4>${name}</h4>
-                    <div style="margin-top: 4px;">
-                        <span class="tag">${element}</span>
-                        <span class="tag">${atkType}</span>
-                        <span class="tag">${job}</span>
+            return `
+            <div class="card char-card">
+                <div class="card-header">
+                    <img src="${img}" alt="${name}">
+                    <div style="flex-grow:1;">
+                        <h4>${name}</h4>
+                        <div style="margin-top: 4px;">
+                            <span class="tag">${element}</span>
+                            <span class="tag">${atkType}</span>
+                            <span class="tag">${job}</span>
+                        </div>
+                    </div>
+                    <div class="card-btns">
+                        <button class="edit-btn" onclick="editItem('characters', '${name}')">編集</button>
+                        <button class="delete-btn" onclick="deleteItem('characters', '${name}')">削除</button>
                     </div>
                 </div>
-                <div class="card-btns">
-                    <button class="edit-btn" onclick="editItem('characters', '${name}')">編集</button>
-                    <button class="delete-btn" onclick="deleteItem('characters', '${name}')">削除</button>
+                <div class="card-content">
+                    <p><strong>所属:</strong> ${faction}</p>
+                    <p><strong>推奨音動機:</strong> <span style="color:#fff;">${weapon}</span></p> 
+                    <p><strong>推奨ディスク:</strong><br>
+                       <span class="set-tag">4set: ${disk4}</span>
+                       <span class="set-tag">2set: ${disk2}</span>
+                    </p>
+                    <p><strong>メイン:</strong> IV:${p4} / V:${p5} / VI:${p6}</p>
+                    <p><strong>サブ優先:</strong> <span style="color:#ffff00;">${substat}</span></p>
                 </div>
-            </div>
-            <div class="card-content">
-                <p><strong>所属:</strong> ${faction}</p>
-                <p><strong>推奨音動機:</strong> <span style="color:#fff;">${weapon}</span></p> 
-                <p><strong>推奨ディスク:</strong><br>
-                   <span class="set-tag">4set: ${disk4}</span>
-                   <span class="set-tag">2set: ${disk2}</span>
-                </p>
-                <p><strong>メイン:</strong> IV:${p4} / V:${p5} / VI:${p6}</p>
-                <p><strong>サブ優先:</strong> <span style="color:#ffff00;">${substat}</span></p>
-            </div>
-        </div>`;
-    }).join('');
+            </div>`;
+        }).join('');
+    }
 
-    // --- ドライバディスク図鑑の表示 ---
     if (allData.artifacts && allData.artifacts.length > 1) {
         artList.innerHTML = allData.artifacts.slice(1).map(a => {
             const artName = a[0];
@@ -125,8 +121,6 @@ function renderAll() {
     }
 }
 
-// --- 以下、編集・保存・削除のロジック ---
-
 function updateArtifactCheckboxes() {
     const container4 = document.getElementById('char-art-4set-list');
     const container2 = document.getElementById('char-art-2set-list');
@@ -147,49 +141,56 @@ function editItem(type, id) {
         showForm('char-form-container');
         const c = allData.characters.find(row => row[0] === id);
         if (!c) return;
+
         document.getElementById('char-name').value = c[0];
         document.getElementById('char-faction').value = c[4];
         document.getElementById('recommended-weapons').value = c[5];
         document.getElementById('sub-stats-priority').value = c[6];
         document.getElementById('char-icon-url').value = c[10];
 
-        const setChecks = (name, val) => {
+        const setValues = (name, val) => {
             const vals = val ? val.split(',').map(v => v.trim()) : [];
             document.querySelectorAll(`input[name="${name}"]`).forEach(el => {
-                el.checked = vals.includes(el.value);
+                if (el.type === "radio") {
+                    el.checked = (el.value === val);
+                } else {
+                    el.checked = vals.includes(el.value);
+                }
             });
         };
-        setChecks('element', c[1]);
-        setChecks('attack-type', c[11]);
-        setChecks('job', c[3]);
-        setChecks('char-4set-choice', c[2]);
-        setChecks('char-2set-choice', c[12]);
-        setChecks('p4', c[7]);
-        setChecks('p5', c[8]);
-        setChecks('p6', c[9]);
+
+        setValues('element', c[1]);
+        setValues('char-4set-choice', c[2]);
+        setValues('job', c[3]);
+        setValues('p4', c[7]);
+        setValues('p5', c[8]);
+        setValues('p6', c[9]);
+        setValues('attack-type', c[11]);
+        setValues('char-2set-choice', c[12]);
     }
 }
 
 document.getElementById('char-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const getChecks = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value).join(', ');
+    const getChecks = (name) => {
+        const checked = Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+        return checked.join(', ');
+    };
     
     const payload = {
         sheetName: "characters",
         data: [
-            document.getElementById('char-name').value, // A:名前
-            getChecks('element'), // B:属性
-            getChecks('char-4set-choice'), // C:4セット
-            getChecks('job'), // D:特性
-            document.getElementById('char-faction').value, // E:所属
-            document.getElementById('recommended-weapons').value, // F:音動機
-            document.getElementById('sub-stats-priority').value, // G:サブステ
-            getChecks('p4'), // H:P4
-            getChecks('p5'), // I:P5
-            getChecks('p6'), // J:P6
-            document.getElementById('char-icon-url').value, // K:画像
-            getChecks('attack-type'), // L:攻撃タイプ
-            getChecks('char-2set-choice') // M:2セット
+            document.getElementById('char-name').value, 
+            getChecks('element'), 
+            getChecks('char-4set-choice'), 
+            getChecks('job'), 
+            document.getElementById('char-faction').value, 
+            document.getElementById('recommended-weapons').value, 
+            document.getElementById('sub-stats-priority').value, 
+            getChecks('p4'), getChecks('p5'), getChecks('p6'), 
+            document.getElementById('char-icon-url').value, 
+            getChecks('attack-type'), 
+            getChecks('char-2set-choice')
         ]
     };
 
@@ -198,15 +199,32 @@ document.getElementById('char-form').addEventListener('submit', async (e) => {
     location.reload();
 });
 
+document.getElementById('art-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+        sheetName: "artifacts",
+        data: [
+            document.getElementById('art-name').value,
+            document.getElementById('art-effect-2').value,
+            document.getElementById('art-effect-4').value,
+            "", "", "", "", "", 
+            document.getElementById('art-img-url').value
+        ]
+    };
+    await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+    alert("ディスク情報を保存しました");
+    location.reload();
+});
+
 async function deleteItem(sheet, id) {
     if(!confirm(`${id} を削除しますか？`)) return;
     await fetch(GAS_URL, { method: "POST", body: JSON.stringify({action: "delete", sheetName: sheet, id: id}) });
-    loadData();
+    location.reload();
 }
 
 function filterData() {
     const query = document.getElementById('search-input').value.toLowerCase();
-    document.querySelectorAll('.card').forEach(card => {
-        card.style.display = card.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+    document.querySelectorAll('.char-card, .art-card').forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(query) ? 'block' : 'none';
     });
 }
