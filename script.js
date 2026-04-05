@@ -1,4 +1,4 @@
-// 【重要】デプロイしたGoogle Apps ScriptのウェブアプリURLをここに貼り付けてください
+// 【重要】デプロイしたGoogle Apps ScriptのウェブアプリURL
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxojoI5JstOJD6PyrXeSTKoSJjE_XzpMMzYPPqHuarCQousZpfPhB4agPk2eN6HpKJ7/exec";
 
 let allData = { characters: [], artifacts: [] };
@@ -73,12 +73,10 @@ function renderAll() {
     // --- ドライバディスク図鑑の表示 ---
     artList.innerHTML = allData.artifacts.slice(1).map(a => {
         const artName = a[0];
-        // 4セット用または2セット用としてそのディスクを使っているキャラを抽出
         const users4set = allData.characters.slice(1).filter(c => c[3] === artName);
         const users2set = allData.characters.slice(1).filter(c => c[13] === artName);
         const allUsers = [...users4set, ...users2set];
         
-        // メインステータスの集計ロジック
         const getAggregatedStats = (colIndex) => {
             let stats = allUsers.map(u => u[colIndex]).join(', ').split(',').map(s => s.trim()).filter(s => s);
             return [...new Set(stats)].join(', ') || "データなし";
@@ -148,7 +146,7 @@ function editItem(type, id) {
         setChecks('attack-type', c[12]);
         setChecks('job', c[4]);
         setChecks('char-4set-choice', c[3]);
-        setChecks('char-2set-choice', c[13]); // N列（2セット目）
+        setChecks('char-2set-choice', c[13]);
         setChecks('p4', c[8]);
         setChecks('p5', c[9]);
         setChecks('p6', c[10]);
@@ -163,7 +161,6 @@ function editItem(type, id) {
     }
 }
 
-// キャラクター保存
 document.getElementById('char-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const getChecks = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value).join(', ');
@@ -171,29 +168,28 @@ document.getElementById('char-form').addEventListener('submit', async (e) => {
     const payload = {
         sheetName: "characters",
         data: [
-            document.getElementById('char-name').value, // A:名前
-            "", // B:ランク(空)
-            getChecks('element'), // C:属性
-            getChecks('char-4set-choice'), // D:4セット
-            getChecks('job'), // E:特性
-            document.getElementById('char-faction').value, // F:所属
-            document.getElementById('recommended-weapons').value, // G:音動機
-            document.getElementById('sub-stats-priority').value, // H:サブステ
-            getChecks('p4'), // I:P4
-            getChecks('p5'), // J:P5
-            getChecks('p6'), // K:P6
-            document.getElementById('char-icon-url').value, // L:画像
-            getChecks('attack-type'), // M:攻撃タイプ
-            getChecks('char-2set-choice') // N:2セット
+            document.getElementById('char-name').value, // A
+            "", // B
+            getChecks('element'), // C
+            getChecks('char-4set-choice'), // D
+            getChecks('job'), // E
+            document.getElementById('char-faction').value, // F
+            document.getElementById('recommended-weapons').value, // G
+            document.getElementById('sub-stats-priority').value, // H
+            getChecks('p4'), // I
+            getChecks('p5'), // J
+            getChecks('p6'), // K
+            document.getElementById('char-icon-url').value, // L
+            getChecks('attack-type'), // M
+            getChecks('char-2set-choice') // N
         ]
     };
 
     await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
     alert("保存完了！");
-    location.reload(); // 反映のためリロード
+    location.reload();
 });
 
-// ディスク保存
 document.getElementById('art-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -213,7 +209,7 @@ document.getElementById('art-form').addEventListener('submit', async (e) => {
 
 async function deleteItem(sheet, id) {
     if(!confirm(`${id} を削除しますか？`)) return;
-    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({action: \"delete\", sheetName: sheet, id: id}) });
+    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({action: "delete", sheetName: sheet, id: id}) });
     loadData();
 }
 
